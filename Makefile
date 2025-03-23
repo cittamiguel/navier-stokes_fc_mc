@@ -14,6 +14,12 @@ demo: demo.o $(COMMON_OBJECTS)
 headless: headless.o $(COMMON_OBJECTS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
+benchmark:
+	python3 benchmark/main.py $(name) --mode benchmark-$(mode) --n-values
+
+plot:
+	python3 benchmark/main.py $(name) --mode plot-$(mode)
+
 clean:
 	rm -f $(TARGETS) *.o .depend *~
 
