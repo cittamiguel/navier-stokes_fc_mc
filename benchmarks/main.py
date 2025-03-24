@@ -124,7 +124,6 @@ if __name__ == "__main__":
         benchmark(args.name, args.n_values, args.num_runs, args.submode)
 
     elif args.mode == "plot":
-        #plot_benchmark_stats(args.name, args.n_values, args.num_runs, args.submode)
-        c = 0
+        plot_benchmark_stats(args.name, args.n_values, args.num_runs, args.submode)
 
     
