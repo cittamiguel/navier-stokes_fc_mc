@@ -173,7 +173,7 @@ int main(int argc, char** argv)
 {
     int i = 0;
 
-    if (argc != 1 && argc != 7) {
+    if (argc != 1 && argc != 7 && argc != 2) {
         fprintf(stderr, "usage : %s N dt diff visc force source\n", argv[0]);
         fprintf(stderr, "where:\n");
         fprintf(stderr, "\t N      : grid resolution\n");
@@ -193,6 +193,15 @@ int main(int argc, char** argv)
         force = 5.0f;
         source = 100.0f;
         fprintf(stderr, "Using defaults : N=%d dt=%g diff=%g visc=%g force = %g source=%g\n",
+                N, dt, diff, visc, force, source);
+    } else if (argc == 2) {
+        N = atoi(argv[1]);
+        dt = 0.1f;
+        diff = 0.0f;
+        visc = 0.0f;
+        force = 5.0f;
+        source = 100.0f;
+        fprintf(stderr, "Using defaults w/ custom N: N=%d dt=%g diff=%g visc=%g force = %g source=%g\n",
                 N, dt, diff, visc, force, source);
     } else {
         N = atoi(argv[1]);

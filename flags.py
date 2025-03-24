@@ -37,8 +37,8 @@ def run_benchmark(name, mode):
     except subprocess.CalledProcessError as e:
         print(f"{command} with mode {mode}")
         print(f"failed with return code {e.returncode}")
-        print(f"Command output: {e.output}")
-        print(f"Command stderr: {e.output}")
+        print(f"Command output: {e.stdout}")
+        print(f"Command stderr: {e.stderr}")
 
 def run_plot(mode):
     command = f"make name=flags mode={mode} plot"
@@ -49,8 +49,8 @@ def run_plot(mode):
     except subprocess.CalledProcessError as e:
         print(f"{command}")
         print(f"failed with return code {e.returncode}")
-        print(f"Command output: {e.output}")
-        print(f"Command stderr: {e.output}")
+        print(f"Command output: {e.stdout}")
+        print(f"Command stderr: {e.stderr}")
 
     
 if __name__ == "__main__":

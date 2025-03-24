@@ -15,10 +15,10 @@ headless: headless.o $(COMMON_OBJECTS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 benchmark:
-	python3 benchmark/main.py $(name) --mode benchmark $(mode) --n-values 256 500 864 1372 2048 --num-runs 3
+	python3 benchmarks/main.py $(name) --mode benchmark --submode $(mode) --num-runs 1
 
 plot:
-	python3 benchmark/main.py $(name) --mode plot $(mode)
+	python3 benchmark/main.py $(name) --mode plot --submode $(mode)
 
 clean:
 	rm -f $(TARGETS) *.o .depend *~

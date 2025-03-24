@@ -30,8 +30,8 @@ def build(compiler, flags):
     except subprocess.CalledProcessError as e:
         print(f"{command}")
         print(f"failed with return code {e.returncode}")
-        print(f"Command output: {e.output}")
-        print(f"Command stderr: {e.output}")
+        print(f"Command output: {e.stdout}")
+        print(f"Command stderr: {e.stderr}")
 
 def run_benchmark(name, mode):
     command = f"make name={name} mode={mode} benchmark"
@@ -42,8 +42,8 @@ def run_benchmark(name, mode):
     except subprocess.CalledProcessError as e:
         print(f"{command}")
         print(f"failed with return code {e.returncode}")
-        print(f"Command output: {e.output}")
-        print(f"Command stderr: {e.output}")
+        print(f"Command output: {e.stdout}")
+        print(f"Command stderr: {e.stderr}")
 
 def run_plot(mode):
     command = f"make name=compilers mode={mode} plot"
@@ -54,8 +54,8 @@ def run_plot(mode):
     except subprocess.CalledProcessError as e:
         print(f"{command}")
         print(f"failed with return code {e.returncode}")
-        print(f"Command output: {e.output}")
-        print(f"Command stderr: {e.output}")
+        print(f"Command output: {e.stdout}")
+        print(f"Command stderr: {e.stderr}")
 #TODO: make changes on make file to be able to run run_benchmark(name) & run_plot
 
 if __name__ == "__main__":
