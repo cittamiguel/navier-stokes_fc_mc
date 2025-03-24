@@ -3,13 +3,12 @@ import os
 import subprocess
 import re
 import numpy as np
-# import statistics.fmean as fmean
 import matplotlib.pyplot as plt
 from pathlib import Path
 from typing import List
 import pandas as pd
 
-DEFAULT_N_VALUES = [256, 300]
+DEFAULT_N_VALUES = [256, 500, 864, 1372]
 DEFAULT_NUM_RUNS = 2
 
 # add to argparse demo, headless, plot
@@ -17,20 +16,12 @@ DEFAULT_NUM_RUNS = 2
 def run_navier_stokes(N: int, submode: str) -> str:
     exec = f"./{submode}"
 
-    try:
-        result = subprocess.run(
-            [exec, str(N)],
-            capture_output=True,
-            text=True,
-            check=True
+    result = subprocess.run(
+        [exec, str(N)],
+        capture_output=True,
+        text=True,
+        check=True
         )
-    
-    except subprocess.CalledProcessError as e:
-        print(f"failed with return code {e.returncode}")
-        print(f"Command output: {e.stdout}")
-        print(f"Command stderr: {e.stderr}")
-        os.abort()
-
     return result.stdout
 
 def benchmark(name: str, n_values:List[int], num_runs: int, submode: str):
