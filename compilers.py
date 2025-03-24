@@ -64,7 +64,7 @@ if __name__ == "__main__":
         "--mode",
         choices=["headless", "demo"],
         default="headless",
-        help= "Mode of operation. Can be 'headless'or 'demo'"
+        help= "Mode of operation. Can be 'headless' or 'demo'"
     )
     arg = parser.parse_args()
 
