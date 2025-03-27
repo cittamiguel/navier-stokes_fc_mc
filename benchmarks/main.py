@@ -30,7 +30,9 @@ def benchmark(name: str, n_values:List[int], num_runs: int, submode: str):
 
     print(f"Running benchmark with {n_values} grid size {num_runs} time/s")
     print(f"Warming up for N = {n_values[0]}...", end=" ", flush=True)
-    run_navier_stokes(N=n_values[0], submode=submode) #warmup
+
+    #run_navier_stokes(N=n_values[0], submode=submode) #warmup
+
     print("ok")
 
     for n in n_values:
@@ -81,8 +83,32 @@ def save_to_file(name: str, n_values: List[int], avg_times: List[float], std_dev
             df = pd.concat([df, new_row], ignore_index=True)
            
     df.to_csv(stats_file, index=False)
-            
 
+def plot_benchmark_stats(name: str, submode: str):
+    stats_files = sorted(
+        Path("benchmarks/stats").glob("*.csv"), key=os.path.getctime
+    )
+
+    plt.figure(figsize=(10, 10))
+
+    for filepath in stats_files:
+        print(f"Reading {filepath}...")
+        df = pd.read_csv(filepath)
+        df.sort_values(by=["N"].values)
+
+        n_values = df["N"].values
+        avg_ns_per_cell = df["avg"].values
+        std_devs = df["std"].values
+
+        plt.errorbar(n_values, avg_ns_per_cell, yerr=std_devs,
+                     capsize=5, label=filepath.name)
+        
+    plt.xlabel("Grid size")
+    plt.ylabel("ns por celda")
+    plt.legend()
+    plt.title(f"{name} stats _ {submode}")
+
+    plt.savefig(f"benchmarks/plots/{name}_{submode}.png", dpi=500)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -124,6 +150,6 @@ if __name__ == "__main__":
         benchmark(args.name, args.n_values, args.num_runs, args.submode)
 
     elif args.mode == "plot":
-        plot_benchmark_stats(args.name, args.n_values, args.num_runs, args.submode)
+        plot_benchmark_stats(args.name, args.submode)
 
     

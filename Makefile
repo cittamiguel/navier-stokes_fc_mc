@@ -15,7 +15,7 @@ headless: headless.o $(COMMON_OBJECTS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 benchmark:
-	python3 benchmarks/main.py $(name) --mode benchmark --submode $(mode) --num-runs 1
+	python3 benchmarks/main.py $(name) --mode benchmark --submode $(mode)
 
 plot:
 	python3 benchmark/main.py $(name) --mode plot --submode $(mode)

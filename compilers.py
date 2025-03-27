@@ -1,5 +1,6 @@
 import subprocess
 import argparse
+import sys
 
 flags_map ={
     "gcc" : [
@@ -24,7 +25,7 @@ flags_map ={
 def build(compiler, flags):
     command = f"make clean && make CC={compiler} CFLAGS='{flags}'"
     try:
-        subprocess.run(command, shell=True, check=True, capture_output=True)
+        proc = subprocess.run(command, shell=True, check=True, stdout=sys.stdout, stderr=sys.stderr)
         print(f"{compiler} with flags {flags} run successfully")
 
     except subprocess.CalledProcessError as e:
