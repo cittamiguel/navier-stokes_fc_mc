@@ -9,7 +9,7 @@ from typing import List
 import pandas as pd
 
 DEFAULT_N_VALUES = [256, 500, 864, 1372]
-DEFAULT_NUM_RUNS = [3, 2, 1, 1]
+DEFAULT_NUM_RUNS = [2, 1, 1, 1]
 
 # add to argparse demo, headless, plot
 
@@ -37,8 +37,8 @@ def benchmark(name: str, n_values:List[int], num_runs: List[int], submode: str):
 
     for n in range(len(n_values)):
         run_metrics = []
-        #for i in range(num_runs):
         i = num_runs[n]
+
         while i != 0:
             print(f"N = {n_values[n]}: {num_runs[n]-i+1}/{num_runs[n]}...", end=" ", flush=True)
             metric = get_performance_from_output(run_navier_stokes(n_values[n], submode))
@@ -97,15 +97,16 @@ def plot_benchmark_stats(name: str, submode: str):
     for filepath in stats_files:
         print(f"Reading {filepath}...")
         df = pd.read_csv(filepath)
-        df.sort_values(by=["N"].values)
+        df.sort_values(by="N")
 
-        n_values = df["N"].values
-        avg_ns_per_cell = df["avg"].values
-        std_devs = df["std"].values
+        n_values = df["N"].to_numpy()
+        avg_ns_per_cell = df["avg"].to_numpy()
+        std_devs = df["std"].to_numpy()
 
         plt.errorbar(n_values, avg_ns_per_cell, yerr=std_devs,
                      capsize=5, label=filepath.name)
         
+    plt.xticks(n_values)
     plt.xlabel("Grid size")
     plt.ylabel("ns por celda")
     plt.legend()

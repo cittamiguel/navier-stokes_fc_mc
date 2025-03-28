@@ -3,7 +3,7 @@ import argparse
 import sys
 
 
-flags_map1 ={
+flags_map ={
     "gcc" : [
         "-O0",
         "-O1",
@@ -22,15 +22,6 @@ flags_map1 ={
         "-Ofast",
     ]
 }
-flags_map ={
-    "clang" : [
-        "-O3",
-        "-Ofast",
-    ],
-    "gcc-12" : [
-        "-Ofast",
-    ]
-} #TODO: add the intel compiler and corresponding flags
 
 def build(compiler, flags):
     command = f"make clean && make CC={compiler} CFLAGS='{flags}'"
@@ -67,7 +58,6 @@ def run_plot(mode):
         print(f"failed with return code {e.returncode}")
         print(f"Command output: {e.stdout}")
         print(f"Command stderr: {e.stderr}")
-#TODO: make changes on make file to be able to run run_benchmark(name) & run_plot
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

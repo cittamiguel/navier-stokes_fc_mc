@@ -18,7 +18,7 @@ benchmark:
 	python3 benchmarks/main.py $(name) --mode benchmark --submode $(mode)
 
 plot:
-	python3 benchmark/main.py $(name) --mode plot --submode $(mode)
+	python3 benchmarks/main.py $(name) --mode plot --submode $(mode)
 
 clean:
 	rm -f $(TARGETS) *.o .depend *~
