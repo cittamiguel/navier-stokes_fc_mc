@@ -9,7 +9,7 @@ from typing import List
 import pandas as pd
 
 DEFAULT_N_VALUES = [256, 500, 864, 1372]
-DEFAULT_NUM_RUNS = 2
+DEFAULT_NUM_RUNS = [3, 2, 1, 1]
 
 # add to argparse demo, headless, plot
 
@@ -24,7 +24,7 @@ def run_navier_stokes(N: int, submode: str) -> str:
         )
     return result.stdout
 
-def benchmark(name: str, n_values:List[int], num_runs: int, submode: str):
+def benchmark(name: str, n_values:List[int], num_runs: List[int], submode: str): #num_runs : Int
     avg_perfomances = []
     std_devs = []
 
@@ -35,13 +35,16 @@ def benchmark(name: str, n_values:List[int], num_runs: int, submode: str):
 
     print("ok")
 
-    for n in n_values:
+    for n in range(len(n_values)):
         run_metrics = []
-        for i in range(num_runs):
-            print(f"N = {n}: {i+1}/{num_runs}...", end=" ", flush=True)
-            metric = get_performance_from_output(run_navier_stokes(n, submode))
+        #for i in range(num_runs):
+        i = num_runs[n]
+        while i != 0:
+            print(f"N = {n_values[n]}: {num_runs[n]-i+1}/{num_runs[n]}...", end=" ", flush=True)
+            metric = get_performance_from_output(run_navier_stokes(n_values[n], submode))
             run_metrics.append(metric)
-            print("ok")
+            i = i-1
+        print("ok")
 
         avg_performance = np.mean(run_metrics)
         std_dev = np.std(run_metrics)

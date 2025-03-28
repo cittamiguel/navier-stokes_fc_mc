@@ -2,7 +2,8 @@ import subprocess
 import argparse
 import sys
 
-flags_map ={
+
+flags_map1 ={
     "gcc" : [
         "-O0",
         "-O1",
@@ -14,6 +15,15 @@ flags_map ={
         "-O0",
         "-O1",
         "-O2",
+        "-O3",
+        "-Ofast",
+    ],
+    "gcc-12" : [
+        "-Ofast",
+    ]
+}
+flags_map ={
+    "clang" : [
         "-O3",
         "-Ofast",
     ],
@@ -37,7 +47,7 @@ def build(compiler, flags):
 def run_benchmark(name, mode):
     command = f"make name={name} mode={mode} benchmark"
     try:
-        subprocess.run(command, shell=True, check=True, capture_output=True)
+        subprocess.run(command, shell=True, check=True,, stdout=sys.stdout, stderr=sys.stderr)
         print(f"{name} benchmark successful")
 
     except subprocess.CalledProcessError as e:
@@ -49,7 +59,7 @@ def run_benchmark(name, mode):
 def run_plot(mode):
     command = f"make name=compilers mode={mode} plot"
     try:
-        subprocess.run(command, shell=True, check=True, capture_output=True)
+        subprocess.run(command, shell=True, check=True, stdout=sys.stdout, stderr=sys.stderr)
         print("plot successful")
 
     except subprocess.CalledProcessError as e:
