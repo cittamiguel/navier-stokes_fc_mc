@@ -38,7 +38,7 @@ def build(compiler, flags):
 def run_benchmark(name, mode):
     command = f"make name={name} mode={mode} benchmark"
     try:
-        subprocess.run(command, shell=True, check=True,, stdout=sys.stdout, stderr=sys.stderr)
+        subprocess.run(command, shell=True, check=True, stdout=sys.stdout, stderr=sys.stderr)
         print(f"{name} benchmark successful")
 
     except subprocess.CalledProcessError as e:
