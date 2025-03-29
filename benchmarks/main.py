@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import List
 import pandas as pd
 
-DEFAULT_N_VALUES = [256, 500, 864, 1372]
-DEFAULT_NUM_RUNS = [2, 1, 1, 1]
+DEFAULT_N_VALUES = [240, 864, 1372]
+DEFAULT_NUM_RUNS = [4, 2, 1]
 
 # add to argparse demo, headless, plot
 
@@ -44,7 +44,7 @@ def benchmark(name: str, n_values:List[int], num_runs: List[int], submode: str):
             metric = get_performance_from_output(run_navier_stokes(n_values[n], submode))
             run_metrics.append(metric)
             i = i-1
-        print("ok")
+            print("ok")
 
         avg_performance = np.mean(run_metrics)
         std_dev = np.std(run_metrics)

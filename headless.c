@@ -149,9 +149,9 @@ static void one_step(void)
     dens_ns_p_cell += 1.0e9 * (wtime() - start_t) / (N * N);
 
     if (1.0 < wtime() - one_second) { /* at least 1s between stats */
-        printf("%lf, %lf, %lf, %lf: ns per cell total, react, vel_step, dens_step\n",
-               (react_ns_p_cell + vel_ns_p_cell + dens_ns_p_cell) / times,
-               react_ns_p_cell / times, vel_ns_p_cell / times, dens_ns_p_cell / times);
+        printf("%lf, %lf, %lf, %lf: cells per ns total, react, vel_step, dens_step\n",
+               times / (react_ns_p_cell + vel_ns_p_cell + dens_ns_p_cell),
+               react_ns_p_cell / times, vel_ns_p_cell / times, dens_ns_p_cell / times); //the other values still count in ns/cell
         one_second = wtime();
         react_ns_p_cell = 0.0;
         vel_ns_p_cell = 0.0;

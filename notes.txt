@@ -1,0 +1,16 @@
+To fit data arrays in atom's memory system hierarchies use the following ecuation
+
+N<sqrt( memSize / (2**5)*6)   ~aproximation
+
+6 bc there are 6 arrays intizialized, 2**5 bc sizeof(float)
+
+
+memory footprint of data estimated to be ~ N**2 * 2**5 * 6
+
+
+---> to fit in L1d => N < 256, 
+               L2 => 256 < N < 1024,
+               L3 => 1024 < N < 3344
+
+when using /usr/bin/time we get a max resident memory footprint > L1 size even using N's as low as 8, but this is also accounting for the
+memory the code is using and so on, so we had to make an aproximation.
