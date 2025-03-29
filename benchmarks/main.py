@@ -9,7 +9,7 @@ from typing import List
 import pandas as pd
 
 DEFAULT_N_VALUES = [240, 864, 1372]
-DEFAULT_NUM_RUNS = [4, 2, 1]
+DEFAULT_NUM_RUNS = [3, 2, 1]
 
 # add to argparse demo, headless, plot
 
@@ -108,7 +108,7 @@ def plot_benchmark_stats(name: str, submode: str):
         
     plt.xticks(n_values)
     plt.xlabel("Grid size")
-    plt.ylabel("ns por celda")
+    plt.ylabel("us per cell")
     plt.legend()
     plt.title(f"{name} stats _ {submode}")
 

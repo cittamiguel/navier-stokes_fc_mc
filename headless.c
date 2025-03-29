@@ -132,30 +132,30 @@ static void one_step(void)
     static int times = 1;
     static double start_t = 0.0;
     static double one_second = 0.0;
-    static double react_ns_p_cell = 0.0;
-    static double vel_ns_p_cell = 0.0;
-    static double dens_ns_p_cell = 0.0;
+    static double react_us_p_cell = 0.0;
+    static double vel_us_p_cell = 0.0;
+    static double dens_us_p_cell = 0.0;
 
     start_t = wtime();
     react(dens_prev, u_prev, v_prev);
-    react_ns_p_cell += 1.0e9 * (wtime() - start_t) / (N * N);
+    react_us_p_cell += 1.0e6 * (wtime() - start_t) / (N * N);
 
     start_t = wtime();
     vel_step(N, u, v, u_prev, v_prev, visc, dt);
-    vel_ns_p_cell += 1.0e9 * (wtime() - start_t) / (N * N);
+    vel_us_p_cell += 1.0e6 * (wtime() - start_t) / (N * N);
 
     start_t = wtime();
     dens_step(N, dens, dens_prev, u, v, diff, dt);
-    dens_ns_p_cell += 1.0e9 * (wtime() - start_t) / (N * N);
+    dens_us_p_cell += 1.0e6 * (wtime() - start_t) / (N * N);
 
     if (1.0 < wtime() - one_second) { /* at least 1s between stats */
-        printf("%lf, %lf, %lf, %lf: cells per ns total, react, vel_step, dens_step\n",
-               times / (react_ns_p_cell + vel_ns_p_cell + dens_ns_p_cell),
-               react_ns_p_cell / times, vel_ns_p_cell / times, dens_ns_p_cell / times); //the other values still count in ns/cell
+        printf("%lf, %lf, %lf, %lf: cells per microsecond total, react, vel_step, dens_step\n",
+               times / (react_us_p_cell + vel_us_p_cell + dens_us_p_cell),
+               react_us_p_cell / times, vel_us_p_cell / times, dens_us_p_cell / times); //the other values still count in us/cell
         one_second = wtime();
-        react_ns_p_cell = 0.0;
-        vel_ns_p_cell = 0.0;
-        dens_ns_p_cell = 0.0;
+        react_us_p_cell = 0.0;
+        vel_us_p_cell = 0.0;
+        dens_us_p_cell = 0.0;
         times = 1;
     } else {
         times++;
