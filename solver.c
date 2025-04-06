@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <math.h>
 
 #include "solver.h"
 
@@ -38,13 +39,30 @@ static void set_bnd(unsigned int n, boundary b, float* x)
 
 static void lin_solve(unsigned int n, boundary b, float* x, const float* x0, float a, float c)
 {
+    const float epsilon = 1e-3f;
+    const float delta = 1e-8f; //avoid dividing by zero
+    int idx = 0;
+    float new_x = 0.0f;
+    float diff =  0.0f;
+    float accumulated_rel_error =  0.0f;
+
     for (unsigned int k = 0; k < 20; k++) {
+        accumulated_rel_error = 0.0f;
+
         for (unsigned int i = 1; i <= n; i++) {
             for (unsigned int j = 1; j <= n; j++) {
-                x[IX(i, j)] = (x0[IX(i, j)] + a * (x[IX(i - 1, j)] + x[IX(i + 1, j)] + x[IX(i, j - 1)] + x[IX(i, j + 1)])) / c;
+                idx = IX(i,j);
+                new_x = (x0[idx] + a * (x[IX(i - 1, j)] + x[IX(i + 1, j)] + x[IX(i, j - 1)] + x[IX(i, j + 1)])) / c;
+
+                diff = fabs(new_x - x[idx]);
+                accumulated_rel_error = diff / (fabs(new_x) + delta);
+                
+                x[IX(i, j)] = new_x;
             }
         }
         set_bnd(n, b, x);
+
+        if (accumulated_rel_error < epsilon) break;
     }
 }
 

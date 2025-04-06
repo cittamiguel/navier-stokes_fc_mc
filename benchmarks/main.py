@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import List
 import pandas as pd
 
-DEFAULT_N_VALUES = [240, 864, 1372]
-DEFAULT_NUM_RUNS = [3, 2, 1]
+DEFAULT_N_VALUES = [128, 500, 800, 1300]
+DEFAULT_NUM_RUNS = [4, 3, 2, 1]
 
 # add to argparse demo, headless, plot
 
@@ -106,9 +106,9 @@ def plot_benchmark_stats(name: str, submode: str):
         plt.errorbar(n_values, avg_ns_per_cell, yerr=std_devs,
                      capsize=5, label=filepath.name)
         
-    plt.xticks(n_values)
+    plt.xticks([256, 500, 800, 1300])
     plt.xlabel("Grid size")
-    plt.ylabel("us per cell")
+    plt.ylabel("ns per cell")
     plt.legend()
     plt.title(f"{name} stats _ {submode}")
 

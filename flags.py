@@ -1,17 +1,15 @@
 import subprocess
 import argparse
+import sys
 
 flags_list = [
     "-O0",
-    "-O1",
-    "-O2",
-    "-O3",
-    "-Ofast",
+    "-O1 -march=native",
+    "-O2 -march=native",
     "-O3 -march=native",
     "-Ofast -march=native",
     "-Ofast -march=native -funsafe-math-optimizations",
     "-Ofast -march=native -ffinite-math-only",
-    "-Ofast -march=native -funsafe-math-optimizations -ffinite-math-only",
     "-Ofast -march=native -funsafe-math-optimizations -ffinite-math-only -funroll-loops",
 ]
 
@@ -19,7 +17,7 @@ flags_list = [
 def build(flags):
     command = f"make clean && make CC=gcc CFLAGS='{flags}'"
     try:
-        subprocess.run(command, shell=True, check=True, capture_output=True)
+        subprocess.run(command, shell=True, check=True, stdout=sys.stdout, stderr=sys.stderr)
         print(f"compile successful w/ {flags}")
         
     except subprocess.CalledProcessError as e:
@@ -31,7 +29,7 @@ def build(flags):
 def run_benchmark(name, mode):
     command = f"make name={name} mode={mode} benchmark"
     try:
-        subprocess.run(command, shell=True, check=True, capture_output=True)
+        subprocess.run(command, shell=True, check=True, stdout=sys.stdout, stderr=sys.stderr)
         print(f"{name} benchmark-{mode} successful")
         
     except subprocess.CalledProcessError as e:
@@ -43,7 +41,7 @@ def run_benchmark(name, mode):
 def run_plot(mode):
     command = f"make name=flags mode={mode} plot"
     try:
-        subprocess.run(command, shell=True, check=True, capture_output=True)
+        subprocess.run(command, shell=True, check=True, stdout=sys.stdout, stderr=sys.stderr)
         print(f"flags plot-{mode} successful")
         
     except subprocess.CalledProcessError as e:
