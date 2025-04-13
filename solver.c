@@ -55,7 +55,7 @@ static void lin_solve(unsigned int n, boundary b, float* x, const float* x0, flo
                 new_x = (x0[idx] + a * (x[IX(i - 1, j)] + x[IX(i + 1, j)] + x[IX(i, j - 1)] + x[IX(i, j + 1)])) / c;
 
                 diff = fabs(new_x - x[idx]);
-                accumulated_rel_error = diff / (fabs(new_x) + delta);
+                accumulated_rel_error += diff / (fabs(new_x) + delta);
                 
                 x[IX(i, j)] = new_x;
             }
