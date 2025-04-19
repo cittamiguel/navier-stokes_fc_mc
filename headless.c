@@ -34,8 +34,8 @@ static int N;
 static float dt, diff, visc;
 static float force, source;
 
-static float *u, *v, *u_prev, *v_prev;
-static float *dens, *dens_prev;
+static float *u, *v, *u_prev, *v_prev __attribute__((aligned(64)));
+static float *dens, *dens_prev __attribute__((aligned(64)));
 
 
 /*
