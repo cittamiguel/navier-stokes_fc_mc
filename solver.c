@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <math.h>
+#include <immintrin.h>
 
 #include "solver.h"
 
@@ -39,13 +40,60 @@ static void set_bnd(unsigned int n, boundary b, float* restrict x)
 }
 
 
+//     for(unsigned int i = 1; i<=n ; i++) //first row, should not be able to autovectorize bc of data dependency
+//     { 
+//         unsigned int j = 1;
+//         x[IX(i, j)] = (x0[IX(i, j)] + ((x[IX(i - 1, j)] + x[IX(i + 1, j)] + x[IX(i, j-1)] + x[IX(i, j+1)])*a))/c;
+//     }
+
+//     for(unsigned int j = 1; j<=n ; j++) //first column, should not be able to autovectorize bc of data dependency
+//     { 
+//         unsigned int i = 1;
+//         x[IX(i, j)] = (x0[IX(i, j)] + (a*x[IX(i-1, j)] + x[IX(i+1, j)] + x[IX(i, j - 1)] + x[IX(i, j + 1)]))/c;
+//     }
+    
+//     unsigned int v = 0;
+//     for(unsigned int r = 2 ; r<= 8+2 ; r++ ) {
+//         unsigned int cols_in_row = 11 - r;              //col goes from 2 to 10, decreasing per row
+
+
+//         sum = x[IX(i - 1, 1)] + x[IX(i + 1, 1)] + x[IX(i, 0)] + x[IX(i, 2)];
+//         sum = sum*a;
+//         sum = sum/c;
+//         x[IX(i, 1)] = x0[IX(i, 1)] + sum;
+//     }
+
 static void lin_solve(unsigned int n, boundary b, float* restrict x, const float* restrict x0, float a, float c)
 {
+    __m256 upper;
+    __m256 prev;
+    __m256 next;
+    __m256 lower;
+    __m256 sum;
+    const __m256 avx_a = _mm256_set1_ps(a);
+    const __m256 avx_c = _mm256_set1_ps(c);
+
+
     for (unsigned int k = 0; k < 20; k++) {
-        for (unsigned int i = 1; i <= n; i++) {
-            for (unsigned int j = 1; j <= n; j++) {
-                float new_x = (x0[IX(i, j)] + a * (x[IX(i - 1, j)] + x[IX(i + 1, j)] + x[IX(i, j - 1)] + x[IX(i, j + 1)])) / c;
-                x[IX(i, j)] = new_x;
+
+        for (unsigned int i = 1; i <= n-8; i= i+8) {
+            for (unsigned int j = 1; j <= n-8; j++) {
+                
+                upper = _mm256_loadu_ps(&x[IX(i - 1, j)]);
+                prev = _mm256_loadu_ps(&x[IX(i, j - 1)]);
+                next = _mm256_loadu_ps(&x[IX(i, j + 1)]);
+                lower = _mm256_loadu_ps(&x[IX(i + 1, j)]); //made sure you use aligned loads
+
+                sum = _mm256_add_ps(upper, lower);
+                sum = _mm256_add_ps(sum, prev);
+                sum = _mm256_add_ps(sum, next);
+                
+                sum = _mm256_mul_ps(sum, avx_a);
+                prev = _mm256_loadu_ps(&x0[IX(i, j)]);
+                sum = _mm256_div_ps(sum, avx_c);
+                sum = _mm256_add_ps(sum, prev);
+                
+                _mm256_storeu_ps(&x[IX(i,j)], sum);
             }
         }
         set_bnd(n, b, x);
