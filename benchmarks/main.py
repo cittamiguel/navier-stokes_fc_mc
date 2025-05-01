@@ -121,16 +121,10 @@ if __name__ == "__main__":
         help= "Name for the benchmark. Used as the filename of the output csv file or plot."
     )
     parser.add_argument(
-        "--mode",
-        choices=["benchmark", "plot"],
-        default="benchmark-headless",
-        help= "Mode of operation. Can be 'benchmark' or 'plot'"
-    )
-    parser.add_argument(
         "--submode",
-        choices=["headless", "demo"],
-        default= "headless",
-        help="Mode of operation. Can be 'headless' or 'demo'"
+        type=str,
+        default="headless",
+        help="Name of the binary to be executed (any string). Default is 'headless'."
     )
     parser.add_argument(
         "--num-runs",
@@ -149,11 +143,4 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-
-    if args.mode == "benchmark":
-        benchmark(args.name, args.n_values, args.num_runs, args.submode)
-
-    elif args.mode == "plot":
-        plot_benchmark_stats(args.name, args.submode)
-
-    
+    benchmark(args.name, args.n_values, args.num_runs, args.submode)
