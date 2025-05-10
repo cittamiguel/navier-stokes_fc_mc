@@ -95,7 +95,6 @@ static int allocate_data(void)
     return (1);
 }
 
-
 static void react(float* d, float* u, float* v)
 {
     int i, size = (N + 2) * (N + 2);
