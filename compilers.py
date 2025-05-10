@@ -2,6 +2,7 @@ import subprocess
 import argparse
 import sys
 
+
 flags_map ={
     "gcc" : [
         "-O0",

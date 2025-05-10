@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stddef.h>
 #include <math.h>
 
@@ -16,7 +15,7 @@ typedef enum { NONE = 0,
                VERTICAL = 1,
                HORIZONTAL = 2 } boundary;
 
-inline static void add_source(unsigned int n, float* restrict x, const float* restrict s, float dt)
+static void add_source(unsigned int n, float* x, const float* s, float dt)
 {
     unsigned int size = (n + 2) * (n + 2);
     for (unsigned int i = 0; i < size; i++) {
@@ -24,7 +23,7 @@ inline static void add_source(unsigned int n, float* restrict x, const float* re
     }
 }
 
-static void set_bnd(unsigned int n, boundary b, float* restrict x)
+static void set_bnd(unsigned int n, boundary b, float* x)
 {
     for (unsigned int i = 1; i <= n; i++) {
         x[IX(0, i)] = b == VERTICAL ? -x[IX(1, i)] : x[IX(1, i)];
@@ -38,22 +37,36 @@ static void set_bnd(unsigned int n, boundary b, float* restrict x)
     x[IX(n + 1, n + 1)] = 0.5f * (x[IX(n, n + 1)] + x[IX(n + 1, n)]);
 }
 
-
-static void lin_solve(unsigned int n, boundary b, float* restrict x, const float* restrict x0, float a, float c)
+static void lin_solve(unsigned int n, boundary b, float* x, const float* x0, float a, float c)
 {
+    const float epsilon = 1e-3f;
+    const float delta = 1e-8f; //avoid dividing by zero
+    int idx = 0;
+    float new_x = 0.0f;
+    float diff =  0.0f;
+    float accumulated_rel_error =  0.0f;
+
     for (unsigned int k = 0; k < 20; k++) {
+        accumulated_rel_error = 0.0f;
+
         for (unsigned int i = 1; i <= n; i++) {
             for (unsigned int j = 1; j <= n; j++) {
-                float new_x = (x0[IX(i, j)] + a * (x[IX(i - 1, j)] + x[IX(i + 1, j)] + x[IX(i, j - 1)] + x[IX(i, j + 1)])) / c;
+                idx = IX(i,j);
+                new_x = (x0[idx] + a * (x[IX(i - 1, j)] + x[IX(i + 1, j)] + x[IX(i, j - 1)] + x[IX(i, j + 1)])) / c;
+
+                diff = fabs(new_x - x[idx]);
+                accumulated_rel_error += diff / (fabs(new_x) + delta);
+                
                 x[IX(i, j)] = new_x;
             }
         }
         set_bnd(n, b, x);
+
+        if (accumulated_rel_error < epsilon) break;
     }
 }
 
-
-inline static void diffuse (unsigned int n, boundary b, float* x, const float* x0, float diff, float dt)
+static void diffuse(unsigned int n, boundary b, float* x, const float* x0, float diff, float dt)
 {
     float a = dt * diff * n * n;
     lin_solve(n, b, x, x0, a, 1 + 4 * a);
