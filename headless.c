@@ -78,14 +78,15 @@ static void clear_data(void)
 
 static int allocate_data(void)
 {
-    int size = (N + 2) * (N + 2);
+    int stride = ((N+2+7)/8)*8;
+    int size = stride * stride;
 
-    u = (float*)malloc(size * sizeof(float));
-    v = (float*)malloc(size * sizeof(float));
-    u_prev = (float*)malloc(size * sizeof(float));
-    v_prev = (float*)malloc(size * sizeof(float));
-    dens = (float*)malloc(size * sizeof(float));
-    dens_prev = (float*)malloc(size * sizeof(float));
+    u = aligned_alloc((size_t)32, size * sizeof(float));
+    v = aligned_alloc((size_t)32, size * sizeof(float));
+    u_prev = aligned_alloc((size_t)32, size * sizeof(float));
+    v_prev = aligned_alloc((size_t)32, size * sizeof(float));
+    dens = aligned_alloc((size_t)32, size * sizeof(float));
+    dens_prev = aligned_alloc((size_t)32, size * sizeof(float));
 
     if (!u || !v || !u_prev || !v_prev || !dens || !dens_prev) {
         fprintf(stderr, "cannot allocate data\n");

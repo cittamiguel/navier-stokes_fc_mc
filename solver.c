@@ -75,23 +75,22 @@ static void lin_solve(unsigned int n, boundary b, float* restrict x, const float
 
 
     for (unsigned int k = 0; k < 20; k++) {
-
-        for (unsigned int i = 1; i <= n-8; i= i+8) {
-            for (unsigned int j = 1; j <= n-8; j++) {
+        for (unsigned int i = 1; i <= n; i= i+8) {
+            for (unsigned int j = 1; j <= n; j++) {
                 
                 upper = _mm256_loadu_ps(&x[IX(i - 1, j)]);
                 prev = _mm256_loadu_ps(&x[IX(i, j - 1)]);
                 next = _mm256_loadu_ps(&x[IX(i, j + 1)]);
-                lower = _mm256_loadu_ps(&x[IX(i + 1, j)]); //made sure you use aligned loads
+                lower = _mm256_loadu_ps(&x[IX(i + 1, j)]); //made sure to use unaligned loads
 
                 sum = _mm256_add_ps(upper, lower);
                 sum = _mm256_add_ps(sum, prev);
                 sum = _mm256_add_ps(sum, next);
+                prev = _mm256_loadu_ps(&x0[IX(i, j)]);
                 
                 sum = _mm256_mul_ps(sum, avx_a);
-                prev = _mm256_loadu_ps(&x0[IX(i, j)]);
-                sum = _mm256_div_ps(sum, avx_c);
                 sum = _mm256_add_ps(sum, prev);
+                sum = _mm256_div_ps(sum, avx_c);
                 
                 _mm256_storeu_ps(&x[IX(i,j)], sum);
             }
