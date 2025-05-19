@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <math.h>
 #include <immintrin.h>
+#include <omp.h>
 
 #include "solver.h"
 
@@ -12,6 +13,8 @@
         x0 = x;          \
         x = tmp;         \
     }
+
+#define MIN(a,b) (a<=b?a:b)
 
 typedef enum { NONE = 0,
                VERTICAL = 1,
@@ -39,30 +42,6 @@ static void set_bnd(unsigned int n, boundary b, float* restrict x)
     x[IX(n + 1, n + 1)] = 0.5f * (x[IX(n, n + 1)] + x[IX(n + 1, n)]);
 }
 
-
-//     for(unsigned int i = 1; i<=n ; i++) //first row, should not be able to autovectorize bc of data dependency
-//     { 
-//         unsigned int j = 1;
-//         x[IX(i, j)] = (x0[IX(i, j)] + ((x[IX(i - 1, j)] + x[IX(i + 1, j)] + x[IX(i, j-1)] + x[IX(i, j+1)])*a))/c;
-//     }
-
-//     for(unsigned int j = 1; j<=n ; j++) //first column, should not be able to autovectorize bc of data dependency
-//     { 
-//         unsigned int i = 1;
-//         x[IX(i, j)] = (x0[IX(i, j)] + (a*x[IX(i-1, j)] + x[IX(i+1, j)] + x[IX(i, j - 1)] + x[IX(i, j + 1)]))/c;
-//     }
-    
-//     unsigned int v = 0;
-//     for(unsigned int r = 2 ; r<= 8+2 ; r++ ) {
-//         unsigned int cols_in_row = 11 - r;              //col goes from 2 to 10, decreasing per row
-
-
-//         sum = x[IX(i - 1, 1)] + x[IX(i + 1, 1)] + x[IX(i, 0)] + x[IX(i, 2)];
-//         sum = sum*a;
-//         sum = sum/c;
-//         x[IX(i, 1)] = x0[IX(i, 1)] + sum;
-//     }
-
 static void lin_solve(unsigned int n, boundary b, float* restrict x, const float* restrict x0, float a, float c)
 {
     __m256 upper;
@@ -73,27 +52,38 @@ static void lin_solve(unsigned int n, boundary b, float* restrict x, const float
     const __m256 avx_a = _mm256_set1_ps(a);
     const __m256 avx_c = _mm256_set1_ps(c);
 
+    int threads, strip_size, tid;
+    unsigned int from, to;
 
-    for (unsigned int k = 0; k < 20; k++) {
-        for (unsigned int i = 1; i <= n; i= i+8) {
+    #pragma omp parallel default(private) shared(avx_a, avx_c, b, x0, x, n, threads, strip_size)
+    // {
+    //     threads = omp_get_num_threads();
+    //     strip_size = (n + threads - 1) / threads;
+        // #pragma omp for
+        for (unsigned int k = 0; k < 20; k++) {
+
+            #pragma omp for schedule(static)
+            // for (unsigned int j = from; j <= to; j++) { estaria repartiendo las strips entre los hilos, hilo0 -> from hilo1 -> from+1.. no sirve
             for (unsigned int j = 1; j <= n; j++) {
-                
-                upper = _mm256_loadu_ps(&x[IX(i - 1, j)]);
-                prev = _mm256_loadu_ps(&x[IX(i, j - 1)]);
-                next = _mm256_loadu_ps(&x[IX(i, j + 1)]);
-                lower = _mm256_loadu_ps(&x[IX(i + 1, j)]); //made sure to use unaligned loads
+                for (unsigned int i = 1; i <= n; i= i+8) {
+                        
+                    upper = _mm256_loadu_ps(&x[IX(i - 1, j)]);
+                    prev = _mm256_loadu_ps(&x[IX(i, j - 1)]);
+                    next = _mm256_loadu_ps(&x[IX(i, j + 1)]);
+                    lower = _mm256_loadu_ps(&x[IX(i + 1, j)]); //made sure to use unaligned loads
 
-                sum = _mm256_add_ps(upper, lower);
-                sum = _mm256_add_ps(sum, prev);
-                sum = _mm256_add_ps(sum, next);
-                prev = _mm256_loadu_ps(&x0[IX(i, j)]);
-                
-                sum = _mm256_mul_ps(sum, avx_a);
-                sum = _mm256_add_ps(sum, prev);
-                sum = _mm256_div_ps(sum, avx_c);
-                
-                _mm256_storeu_ps(&x[IX(i,j)], sum);
-            }
+                    sum = _mm256_add_ps(upper, lower);
+                    sum = _mm256_add_ps(sum, prev);
+                    sum = _mm256_add_ps(sum, next);
+                    prev = _mm256_loadu_ps(&x0[IX(i, j)]);
+                    
+                    sum = _mm256_mul_ps(sum, avx_a);
+                    sum = _mm256_add_ps(sum, prev);
+                    sum = _mm256_div_ps(sum, avx_c);
+                    
+                    _mm256_storeu_ps(&x[IX(i,j)], sum);
+                }
+            // }
         }
         set_bnd(n, b, x);
     }
