@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <immintrin.h>
+#include <omp.h>
 
 #include "solver.h"
 #include "indices.h"
@@ -42,30 +43,44 @@ static void lin_solve_rb_step(grid_color color,
 {
     const __m256 vec_a = _mm256_set1_ps(a);
     const __m256 vec_c = _mm256_set1_ps(c);
-    int shift = color == RED ? 1 : -1;
-    unsigned int start = color == RED ? 0 : 1;
-
+    
     unsigned int width = (n + 2) / 2;
+    int init_shift = color == RED ? 1 : -1;
+    unsigned int init_start = color == RED ? 0 : 1;
+    
+    #pragma omp parallel default(none) shared(same0, neigh, same, vec_a, vec_c, n, width, init_shift, init_start)
+    {
+        #pragma omp for schedule(static)
+        for (unsigned int y = 1; y <= n; ++y) {
+            int shift = init_shift;
+            unsigned int start = init_start;
 
-    for (unsigned int y = 1; y <= n; ++y, shift = -shift, start = 1 - start) {
-        for (unsigned int x = start; (x+7) < width - (1 - start); x += 8) {
-            int index = idx(x, y, width);
+            // alterna shift/start en funcion a la fila
+            if((y & 1) != 1) {
+                shift = - shift;
+                start = 1 - start;
+            }
 
-            __m256 s0 = _mm256_loadu_ps(&same0[index]);
-            __m256 nM = _mm256_loadu_ps(&neigh[index-width]);
-            __m256 nC = _mm256_loadu_ps(&neigh[index]);
-            __m256 nE = _mm256_loadu_ps(&neigh[index+shift]);
-            __m256 nS = _mm256_loadu_ps(&neigh[index+width]);
+            for (unsigned int x = start; (x+7) < width - (1 - start); x += 8) {
+                int index = idx(x, y, width);
 
-            __m256 sum = _mm256_add_ps(nM, nC);
-            sum = _mm256_add_ps(sum, nE);
-            sum = _mm256_add_ps(sum, nS);
-            sum = _mm256_mul_ps(sum, vec_a);
-            sum = _mm256_add_ps(sum, s0);
-            sum = _mm256_div_ps(sum, vec_c);
+                __m256 s0 = _mm256_loadu_ps(&same0[index]);
+                __m256 nM = _mm256_loadu_ps(&neigh[index-width]);
+                __m256 nC = _mm256_loadu_ps(&neigh[index]);
+                __m256 nE = _mm256_loadu_ps(&neigh[index+shift]);
+                __m256 nS = _mm256_loadu_ps(&neigh[index+width]);
 
-            _mm256_storeu_ps(&same[index], sum);
+                __m256 sum = _mm256_add_ps(nM, nC);
+                sum = _mm256_add_ps(sum, nE);
+                sum = _mm256_add_ps(sum, nS);
+                sum = _mm256_mul_ps(sum, vec_a);
+                sum = _mm256_add_ps(sum, s0);
+                sum = _mm256_div_ps(sum, vec_c);
 
+                _mm256_storeu_ps(&same[index], sum);
+            }
+            shift = -shift;
+            start = 1 - start;
         }
     }
 }
