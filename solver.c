@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <math.h>
+#include <cuda_runtime.h> // Core CUDA runtime APIs
+#include <device_launch_parameters.h> // For thread/block intrinsics
 
 #include "solver.h"
+#include "indices.h"
 
 #define IX(i, j) ((i) + (n + 2) * (j))
 #define SWAP(x0, x)      \
@@ -12,10 +15,6 @@
         x = tmp;         \
     }
 
-typedef enum { NONE = 0,
-               VERTICAL = 1,
-               HORIZONTAL = 2 } boundary;
-
 inline static void add_source(unsigned int n, float* restrict x, const float* restrict s, float dt)
 {
     unsigned int size = (n + 2) * (n + 2);
@@ -24,7 +23,7 @@ inline static void add_source(unsigned int n, float* restrict x, const float* re
     }
 }
 
-static void set_bnd(unsigned int n, boundary b, float* restrict x)
+void set_bnd(unsigned int n, boundary b, float* x)
 {
     for (unsigned int i = 1; i <= n; i++) {
         x[IX(0, i)] = b == VERTICAL ? -x[IX(1, i)] : x[IX(1, i)];
@@ -37,21 +36,6 @@ static void set_bnd(unsigned int n, boundary b, float* restrict x)
     x[IX(n + 1, 0)] = 0.5f * (x[IX(n, 0)] + x[IX(n + 1, 1)]);
     x[IX(n + 1, n + 1)] = 0.5f * (x[IX(n, n + 1)] + x[IX(n + 1, n)]);
 }
-
-
-static void lin_solve(unsigned int n, boundary b, float* restrict x, const float* restrict x0, float a, float c)
-{
-    for (unsigned int k = 0; k < 20; k++) {
-        for (unsigned int i = 1; i <= n; i++) {
-            for (unsigned int j = 1; j <= n; j++) {
-                float new_x = (x0[IX(i, j)] + a * (x[IX(i - 1, j)] + x[IX(i + 1, j)] + x[IX(i, j - 1)] + x[IX(i, j + 1)])) / c;
-                x[IX(i, j)] = new_x;
-            }
-        }
-        set_bnd(n, b, x);
-    }
-}
-
 
 inline static void diffuse (unsigned int n, boundary b, float* x, const float* x0, float diff, float dt)
 {
