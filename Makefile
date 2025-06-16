@@ -1,23 +1,32 @@
-CC=clang
-CFLAGS=-std=c11 -Wall -Wextra -Wno-unused-parameter
+CC         =gcc
+CFLAGS     =-std=c11 -Wall -Wextra -Wno-unused-parameter
+NVCC       = nvcc
+NVCCFLAGS  = -O2 -Xcompiler -fopenmp
+
 LDFLAGS=
 
-TARGETS=demo headless
-SOURCES=$(shell echo *.c)
-COMMON_OBJECTS=wtime.o
-SOLVER_OBJECT=solver.o
+TARGETS         = demo headless
+SOURCES         = $(wildcard *.c)
+CU_SOURCES      = $(wildcard *.cu)
+COMMON_OBJECTS  = wtime.o
+SOLVER_OBJECT   = solver.o
+CUDA_OBJECT     = lin_solve.o
+
 SOLVER_CFLAGS=-march=native -std=c99 -Werror -Wextra -Rpass=loop-vectorize -ftree-vectorize -ffast-math -funsafe-math-optimizations -O3
 
 all: $(TARGETS)
 
-demo: demo.o $(COMMON_OBJECTS)
+demo: demo.o $(COMMON_OBJECTS) $(SOLVER_OBJECT) $(CUDA_OBJECT)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) -lGL -lGLU -lglut
 
-headless: headless.o $(COMMON_OBJECTS) $(SOLVER_OBJECT)
+headless: headless.o $(COMMON_OBJECTS) $(SOLVER_OBJECT) $(CUDA_OBJECT)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
-$(SOLVER_OBJECT):
-	$(CC) -c $(SOLVER_CFLAGS) solver.c -o solver.o
+$(SOLVER_OBJECT): solver.c
+	$(CC) -c $(SOLVER_CFLAGS) $< -o $@
+
+$(CUDA_OBJECT): lin_solve.cu
+	$(NVCC) $(NVCCFLAGS) -c $< -o $@
 
 benchmark:
 	python3 benchmarks/main.py $(name) --mode benchmark --submode $(mode)
