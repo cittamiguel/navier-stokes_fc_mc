@@ -66,15 +66,13 @@ void lin_solve(unsigned int n, boundary b,
     const float * red0 = d_x0;
     const float * blk0 = d_x0 + color_size;
 
-    dim3 blockDim(32, 8);  // tunable
-    dim3 gridDim((n + blockDim.x - 1) / blockDim.x, (n + blockDim.y - 1) / blockDim.y);
+    dim3 blockDim(32, 4);  // tunable
+    dim3 gridDim((color_size + blockDim.x - 1) / blockDim.x, (color_size + blockDim.y - 1) / blockDim.y);
 
     for (unsigned int k = 0; k < 20; ++k) {
         lin_solve_rb_step_kernel<<<gridDim, blockDim>>>(RED, n, a, c, red0, blk, red);
-        cudaDeviceSynchronize();
 
         lin_solve_rb_step_kernel<<<gridDim, blockDim>>>(BLACK, n, a, c, blk0, red, blk);
-        cudaDeviceSynchronize();
         
         set_bnd(n, b, x);
     }
