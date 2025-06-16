@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <cuda_runtime.h> // Core CUDA runtime APIs
-#include <device_launch_parameters.h> // For thread/block intrinsics
+#include <device_launch_parameters.h> // For thread/block ins
+#include <stdio.h>
 extern "C" {
 #include "solver.h"
 }
@@ -31,16 +32,16 @@ __global__ void lin_solve_rb_step_kernel(grid_color color,
         neigh[index] +
         neigh[index + shift] +
         neigh[index + width])) / c;
-    }
 }
+
 
 void lin_solve(unsigned int n, boundary b,
                    float * x, const float * x0,
                    float a, float c)
 {
-    __constant__ unsigned int color_size = (n + 2) * ((n + 2) / 2);
-    float *d_x0 = NULL;
-    float *d_x = NULL;
+    unsigned int color_size = (n + 2) * ((n + 2) / 2);
+    float *d_x0;
+    float *d_x;
     size_t total_size = 2 * color_size * sizeof(float);
 
     cudaError_t err1 = cudaMalloc((void**)&d_x, total_size);
@@ -48,14 +49,15 @@ void lin_solve(unsigned int n, boundary b,
 
     if(err1 != cudaSuccess || err2 != cudaSuccess)
     {
-        fprintf(stderr, "CUDA malloc failed: %s\n", cudaGetErrorString(err));
+        fprintf(stderr, "CUDA malloc failed: %s\n", cudaGetErrorString(err1));
+	fprintf(stderr, "CUDA malloc failed %s\n", cudaGetErrorString(err2));
         exit(EXIT_FAILURE);
     }
 
     if (cudaMemcpy(d_x, x, total_size, cudaMemcpyHostToDevice) != cudaSuccess ||
         cudaMemcpy(d_x0, x0, total_size, cudaMemcpyHostToDevice) != cudaSuccess )
     {
-        fprintf(stderr, "CUDA Memcpy failed: %s\n", cudaGetErrorString(err));
+        fprintf(stderr, "CUDA Memcpy failed \n");
         exit(EXIT_FAILURE);
     }
     
