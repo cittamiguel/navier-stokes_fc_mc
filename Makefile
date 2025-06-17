@@ -1,7 +1,7 @@
 CC         =gcc
 CFLAGS     =-std=c11 -Wall -Wextra -Wno-unused-parameter
 NVCC       = nvcc
-NVCCFLAGS  = -O2 -Xcompiler -fopenmp
+NVCCFLAGS  = -O2 -Xcompiler -fopenmp -arch=compute_61 -code=sm_61
 
 LDFLAGS=
 
@@ -9,21 +9,17 @@ TARGETS         = demo headless
 SOURCES         = $(wildcard *.c)
 CU_SOURCES      = $(wildcard *.cu)
 COMMON_OBJECTS  = wtime.o
-SOLVER_OBJECT   = solver.o
-CUDA_OBJECT     = lin_solve.o
+CUDA_OBJECT     = solver.o
 
 SOLVER_CFLAGS=-march=native -std=c99 -Werror -Wextra -Rpass=loop-vectorize -ftree-vectorize -ffast-math -funsafe-math-optimizations -O3
 
 all: $(TARGETS)
 
-demo: demo.o $(COMMON_OBJECTS) $(SOLVER_OBJECT) $(CUDA_OBJECT)
+demo: demo.o $(COMMON_OBJECTS) $(CUDA_OBJECT)
 	$(NVCC) $(NVCCFLAGS) $^ -o $@ $(LDFLAGS) -lGL -lGLU -lglut
 
 headless: headless.o $(COMMON_OBJECTS) $(CUDA_OBJECT)
 	$(NVCC) $(NVCCFLAGS) $^ -o $@
-
-$(SOLVER_OBJECT): solver.cu
-	$(NVCC) -c $(NVCCFLAGS) $< -o $@
 
 $(CUDA_OBJECT): solver.cu
 	$(NVCC) $(NVCCFLAGS) -c $< -o $@

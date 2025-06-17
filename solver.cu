@@ -60,7 +60,7 @@ __global__ void lin_solve_rb_step_kernel(grid_color color,
     
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x + start;
 
-    if (y > n || x > width - (1 - start)) return;
+    if (y > n || x > width) return;
     
     // for (unsigned int x = threadIdx.x + start; x < width - (1 - start); x += blockDim.x) {
     int index = y * width + x;
@@ -206,7 +206,7 @@ void dens_step(unsigned int n, float* x, float* x0, float* u, float* v, float di
 
     //define block dimensions
     int N = n+2;
-    dim3 blockDim(32, 8);  // 256 threads
+    dim3 blockDim(32, 4);  // 128 threads
     dim3 gridDim((N + blockDim.x - 1) / blockDim.x, (N + blockDim.y - 1) / blockDim.y);
 
     //ADD_SOURCE
@@ -262,7 +262,7 @@ void vel_step(unsigned int n, float* u, float* v, float* u0, float* v0, float vi
 
     //define block dimensions
     int N = n+2;
-    dim3 blockDim(32, 8);  // 256 threads
+    dim3 blockDim(32, 4);  // 128 threads
     dim3 gridDim((N + blockDim.x - 1) / blockDim.x, (N + blockDim.y - 1) / blockDim.y);
 
     //ADD_SOURCE
