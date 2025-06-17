@@ -10,6 +10,15 @@ extern "C" {
 #include "solver.h"
 #include "indices.h"
 
+#define IX(i, j) ((i) + (n + 2) * (j))
+#define SWAP(x0, x)      \
+    {                    \
+        float* tmp = x0; \
+        x0 = x;          \
+        x = tmp;         \
+    }
+
+
 __global__ void set_bnd_kernel(unsigned int n, boundary b, float* x)
 {
     unsigned int i = blockIdx.x * blockDim.x + threadIdx.x + 1;
@@ -35,7 +44,7 @@ __global__ void set_bnd_kernel(unsigned int n, boundary b, float* x)
 }
 
 
-__device__ void lin_solve_rb_step_kernel(grid_color color,
+__global__ void lin_solve_rb_step_kernel(grid_color color,
                               unsigned int n,
                               float a,
                               float c,
@@ -131,7 +140,7 @@ __global__ static void kernel_advect(unsigned int n, boundary b, float* d_d, con
         s0 = 1 - s1;
         t1 = y - j0;
         t0 = 1 - t1;
-        d[IX(i, j)] = s0 * (t0 * d_d0[IX(i0, j0)] + t1 * d_d0[IX(i0, j1)]) + s1 * (t0 * d_d0[IX(i1, j0)] + t1 * d_d0[IX(i1, j1)]);
+        d_d[IX(i, j)] = s0 * (t0 * d_d0[IX(i0, j0)] + t1 * d_d0[IX(i0, j1)]) + s1 * (t0 * d_d0[IX(i1, j0)] + t1 * d_d0[IX(i1, j1)]);
     }
 }
 
@@ -205,13 +214,13 @@ void dens_step(unsigned int n, float* x, float* x0, float* u, float* v, float di
     SWAP(d_x0, d_x);
 
     //DIFUSE
-    diffuse(n, NONE, d_x, d_x0, diff, dt)
+    diffuse(n, NONE, d_x, d_x0, diff, dt);
     SWAP(d_x0, d_x);
     
     //ADVECT
     kernel_advect<<<gridDim, blockDim>>>(n, NONE, d_x, d_x0, d_u, d_v, dt);
 
-    set_bnd_kernel<<<gridDim, blockDim>>>(n, b, d_x);
+    set_bnd_kernel<<<gridDim, blockDim>>>(n, NONE, d_x);
 
     //bring back results, u & v constants
     cudaMemcpy(x, d_x, total_size, cudaMemcpyDeviceToHost);
