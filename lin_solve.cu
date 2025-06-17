@@ -6,7 +6,31 @@ extern "C" {
 #include "solver.h"
 }
 
-__global__ void lin_solve_rb_step_kernel(grid_color color,
+__global__ void set_bnd_kernel(unsigned int n, boundary b, float* x)
+{
+    unsigned int i = blockIdx.x * blockDim.x + threadIdx.x + 1;
+    
+    // Handle the main boundary loops (i from 1 to n)
+    if (i <= n) {
+        // Left and right boundaries
+        x[IX(0, i)] = (b == VERTICAL) ? -x[IX(1, i)] : x[IX(1, i)];
+        x[IX(n + 1, i)] = (b == VERTICAL) ? -x[IX(n, i)] : x[IX(n, i)];
+        
+        // Top and bottom boundaries
+        x[IX(i, 0)] = (b == HORIZONTAL) ? -x[IX(i, 1)] : x[IX(i, 1)];
+        x[IX(i, n + 1)] = (b == HORIZONTAL) ? -x[IX(i, n)] : x[IX(i, n)];
+    }
+    
+    // Handle corners with a single thread (thread 0 of block 0)
+    if (blockIdx.x == 0 && threadIdx.x == 0) {
+        x[IX(0, 0)] = 0.5f * (x[IX(1, 0)] + x[IX(0, 1)]);
+        x[IX(0, n + 1)] = 0.5f * (x[IX(1, n + 1)] + x[IX(0, n)]);
+        x[IX(n + 1, 0)] = 0.5f * (x[IX(n, 0)] + x[IX(n + 1, 1)]);
+        x[IX(n + 1, n + 1)] = 0.5f * (x[IX(n, n + 1)] + x[IX(n + 1, n)]);
+    }
+}
+
+__device__ void lin_solve_rb_step_kernel(grid_color color,
                               unsigned int n,
                               float a,
                               float c,
@@ -36,48 +60,23 @@ __global__ void lin_solve_rb_step_kernel(grid_color color,
 
 
 void lin_solve(unsigned int n, boundary b,
-                   float * x, const float * x0,
+                   float * d_x, const float * d_x0,
                    float a, float c)
 {
     unsigned int color_size = (n + 2) * ((n + 2) / 2);
-    float *d_x0;
-    float *d_x;
-    size_t total_size = 2 * color_size * sizeof(float);
-
-    cudaError_t err1 = cudaMalloc((void**)&d_x, total_size);
-    cudaError_t err2 = cudaMalloc((void**)&d_x0, total_size);
-
-    if(err1 != cudaSuccess || err2 != cudaSuccess)
-    {
-        fprintf(stderr, "CUDA malloc failed: %s\n", cudaGetErrorString(err1));
-	fprintf(stderr, "CUDA malloc failed %s\n", cudaGetErrorString(err2));
-        exit(EXIT_FAILURE);
-    }
-
-    if (cudaMemcpy(d_x, x, total_size, cudaMemcpyHostToDevice) != cudaSuccess ||
-        cudaMemcpy(d_x0, x0, total_size, cudaMemcpyHostToDevice) != cudaSuccess )
-    {
-        fprintf(stderr, "CUDA Memcpy failed \n");
-        exit(EXIT_FAILURE);
-    }
-    
     float * red = d_x;
     float * blk = d_x + color_size;
     const float * red0 = d_x0;
     const float * blk0 = d_x0 + color_size;
 
-    dim3 blockDim(32, 4);  // tunable
-    dim3 gridDim((color_size + blockDim.x - 1) / blockDim.x, (color_size + blockDim.y - 1) / blockDim.y);
+    dim3 blockDim(128);  // tunable
+    dim3 gridDim((color_size + blockDim.x - 1) / blockDim.x);
 
     for (unsigned int k = 0; k < 20; ++k) {
         lin_solve_rb_step_kernel<<<gridDim, blockDim>>>(RED, n, a, c, red0, blk, red);
 
         lin_solve_rb_step_kernel<<<gridDim, blockDim>>>(BLACK, n, a, c, blk0, red, blk);
         
-        set_bnd(n, b, x);
+        set_bnd_kernel<<<gridDim, blockDim>>>(n, b, d_x);
     }
-
-    cudaMemcpy(x, d_x, total_size, cudaMemcpyDeviceToHost);
-    cudaFree(d_x);
-    cudaFree(d_x0);
 }

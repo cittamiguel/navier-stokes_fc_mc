@@ -37,7 +37,7 @@ plot:
 clean:
 	rm -f $(TARGETS) *.o .depend *~
 
-.depend: *.[ch]
+depend:
 	$(CC) -MM $(SOURCES) >.depend
 
 -include .depend

@@ -14,3 +14,94 @@ memory footprint of data estimated to be ~ N**2 * 2**5 * 6
 
 when using /usr/bin/time we get a max resident memory footprint > L1 size even using N's as low as 8, but this is also accounting for the
 memory the code is using and so on, so we had to make an aproximation.
+
+
+
+
+------------------
+
+# Compiler and flags
+NVCC       = nvcc
+CC         = gcc
+CFLAGS     = -O2 -Wall
+NVCCFLAGS  = -O2 -Xcompiler -fopenmp
+
+# Graphics libraries
+LIBS       = -lGL -lGLU -lglut -lm
+
+# Source files
+C_SOURCES   = $(wildcard *.c)
+CU_SOURCES  = $(wildcard *.cu)
+OBJECTS     = $(C_SOURCES:.c=.o) $(CU_SOURCES:.cu=.o)
+
+# Output binary
+TARGET = main
+
+# Default rule
+all: $(TARGET)
+
+# Link all objects into final executable
+$(TARGET): $(OBJECTS)
+	$(NVCC) $(NVCCFLAGS) -o $@ $^ $(LIBS)
+
+# Compile C files
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Compile CUDA files
+%.o: %.cu
+	$(NVCC) $(NVCCFLAGS) -c $< -o $@
+
+# Clean rule
+clean:
+	rm -f $(OBJECTS) $(TARGET)
+
+# Headless version (no graphics)
+headless: headless.o solver.o wtime.o lin_solve.o
+	$(NVCC) $(NVCCFLAGS) -o $@ $^
+
+.PHONY: all clean headless
+
+-----------------------------------------------------------------------------
+
+# Compiler and flags
+NVCC       = nvcc
+CC         = gcc
+CFLAGS     = -O2 -Wall
+NVCCFLAGS  = -O2 -Xcompiler -fopenmp
+
+# Graphics libraries
+LIBS       = -lGL -lGLU -lglut -lm
+
+# Source files
+C_SOURCES   = $(wildcard *.c)
+CU_SOURCES  = $(wildcard *.cu)
+OBJECTS     = $(C_SOURCES:.c=.o) $(CU_SOURCES:.cu=.o)
+
+# Output binary
+TARGET = main
+
+# Default rule
+all: $(TARGET)
+
+# Link all objects into final executable
+$(TARGET): $(OBJECTS)
+	$(NVCC) $(NVCCFLAGS) -o $@ $^ $(LIBS)
+
+# Compile C files
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Compile CUDA files
+%.o: %.cu
+	$(NVCC) $(NVCCFLAGS) -c $< -o $@
+
+# Clean rule
+clean:
+	rm -f $(OBJECTS) $(TARGET)
+
+# Headless version (no graphics)
+headless: headless.o solver.o wtime.o lin_solve.o
+	$(NVCC) $(NVCCFLAGS) -o $@ $^
+
+.PHONY: all clean headless

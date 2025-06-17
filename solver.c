@@ -87,8 +87,10 @@ static void project(unsigned int n, float* u, float* v, float* p, float* div)
     }
     set_bnd(n, NONE, div);
     set_bnd(n, NONE, p);
+ 
 
     lin_solve(n, NONE, p, div, 1, 4);
+
 
     for (unsigned int i = 1; i <= n; i++) {
         for (unsigned int j = 1; j <= n; j++) {
