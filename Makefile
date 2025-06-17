@@ -17,15 +17,15 @@ SOLVER_CFLAGS=-march=native -std=c99 -Werror -Wextra -Rpass=loop-vectorize -ftre
 all: $(TARGETS)
 
 demo: demo.o $(COMMON_OBJECTS) $(SOLVER_OBJECT) $(CUDA_OBJECT)
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) -lGL -lGLU -lglut
+	$(NVCC) $(NVCCFLAGS) $^ -o $@ $(LDFLAGS) -lGL -lGLU -lglut
 
-headless: headless.o $(COMMON_OBJECTS) $(SOLVER_OBJECT) $(CUDA_OBJECT)
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+headless: headless.o $(COMMON_OBJECTS) $(CUDA_OBJECT)
+	$(NVCC) $(NVCCFLAGS) $^ -o $@
 
-$(SOLVER_OBJECT): solver.c
-	$(CC) -c $(SOLVER_CFLAGS) $< -o $@
+$(SOLVER_OBJECT): solver.cu
+	$(NVCC) -c $(NVCCFLAGS) $< -o $@
 
-$(CUDA_OBJECT): lin_solve.cu
+$(CUDA_OBJECT): solver.cu
 	$(NVCC) $(NVCCFLAGS) -c $< -o $@
 
 benchmark:

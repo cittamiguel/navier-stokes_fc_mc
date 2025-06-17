@@ -13,16 +13,8 @@ typedef enum { NONE = 0,
 
 typedef enum { RED, BLACK } grid_color;
 
-void set_bnd(unsigned int n, boundary b, float* x);
-
 void dens_step(unsigned int n, float* x, float* x0, float* u, float* v, float diff, float dt);
 void vel_step(unsigned int n, float* u, float* v, float* u0, float* v0, float visc, float dt);
-
-// Normal CPU-side functions
-void lin_solve(unsigned int n, boundary b,
-                   float * x, const float * x0,
-                   float a, float c);
-
 
 #ifdef __cplusplus
 }
