@@ -14,6 +14,7 @@ typedef enum { RED, BLACK } grid_color;
 static void add_source(unsigned int n, float * x, const float * s, float dt)
 {
     unsigned int size = (n + 2) * (n + 2);
+    #pragma omp parallel for schedule(static) shared(s, dt)
     for (unsigned int i = 0; i < size; i++) {
         x[i] += dt * s[i];
     }
@@ -21,6 +22,7 @@ static void add_source(unsigned int n, float * x, const float * s, float dt)
 
 static void set_bnd(unsigned int n, boundary b, float * x)
 {
+    #pragma omp parallel for schedule(static)
     for (unsigned int i = 1; i <= n; i++) {
         x[IX(0, i)]     = b == VERTICAL ? -x[IX(1, i)] : x[IX(1, i)];
         x[IX(n + 1, i)] = b == VERTICAL ? -x[IX(n, i)] : x[IX(n, i)];
@@ -114,9 +116,11 @@ static void advect(unsigned int n, boundary b, float * d, const float * d0, cons
     int i0, i1, j0, j1;
     float x, y, s0, t0, s1, t1;
 
-    float dt0 = dt * n;
-    for (unsigned int i = 1; i <= n; i++) {
-        for (unsigned int j = 1; j <= n; j++) {
+    const float dt0 = dt * n;
+
+    #pragma omp parallel for schedule(static) shared(dt0) private(x, y, s0, t0, s1, t1, i0, i1, j0, j1)
+    for (unsigned int j = 1; j <= n; j++) {
+        for (unsigned int i = 1; i <= n; i++) {
             x = i - dt0 * u[IX(i, j)];
             y = j - dt0 * v[IX(i, j)];
             if (x < 0.5f) {
@@ -146,8 +150,9 @@ static void advect(unsigned int n, boundary b, float * d, const float * d0, cons
 
 static void project(unsigned int n, float *u, float *v, float *p, float *div)
 {
-    for (unsigned int i = 1; i <= n; i++) {
-        for (unsigned int j = 1; j <= n; j++) {
+    #pragma omp parallel for shared(u, v, n)
+    for (unsigned int j = 1; j <= n; j++) {
+        for (unsigned int i = 1; i <= n; i++) {
             div[IX(i, j)] = -0.5f * (u[IX(i + 1, j)] - u[IX(i - 1, j)] +
                                      v[IX(i, j + 1)] - v[IX(i, j - 1)]) / n;
             p[IX(i, j)] = 0;
@@ -158,8 +163,9 @@ static void project(unsigned int n, float *u, float *v, float *p, float *div)
 
     lin_solve(n, NONE, p, div, 1, 4);
 
-    for (unsigned int i = 1; i <= n; i++) {
-        for (unsigned int j = 1; j <= n; j++) {
+    #pragma omp parallel for shared(u, v, n)
+    for (unsigned int j = 1; j <= n; j++) {
+            for (unsigned int i = 1; i <= n; i++) {
             u[IX(i, j)] -= 0.5f * n * (p[IX(i + 1, j)] - p[IX(i - 1, j)]);
             v[IX(i, j)] -= 0.5f * n * (p[IX(i, j + 1)] - p[IX(i, j - 1)]);
         }
